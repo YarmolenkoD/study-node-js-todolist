@@ -1,7 +1,7 @@
-var ObjectID = require('mongodb').ObjectID
+let ObjectID = require('mongodb').ObjectID
+const mongoose = require('mongoose')
 
-module.exports = function(app, db) {
-
+module.exports = function(app, db, Todo) {
   app.put ('/notes/:id', (req, res) => {
     const id = req.params.id;
     const details = { '_id': new ObjectID(id) }
@@ -40,12 +40,11 @@ module.exports = function(app, db) {
   })
 
 
-  app.get('/todo', (req, res) => {
+  app.get('/todos', (req, res) => {
     const allTodos = db.collection('todos').find({}, (err, items) => {
       return items
     })
     let result = []
-    console.log(1111, allTodos)
     allTodos.forEach((err, item) => {
       if (item) {
         result.push(item)
@@ -57,15 +56,24 @@ module.exports = function(app, db) {
   })
 
   app.post('/todo', (req, res) => {
-    const todo = { text: req.body.body, title: req.body.title }
-    db.collection('todos').insert(todo, (err, result) => {
-      console.log(req.body)
-      if (err) {
-        res.send({'error': 'An error has occurred'})
-      } else {
-        res.send(result.ops[0])
-      }
+    let newTodo = new Todo({
+      text: req.body.body,
+      title: req.body.title
     })
+    newTodo.save().then((doc) => {
+      console.log('save todo: ' + doc)
+    }, (e) => {
+      console.log('Unable to save todo: ' + e)
+    })
+    // const todo = { text: req.body.body, title: req.body.title }
+    // db.collection('todos').insert(todo, (err, result) => {
+    //   console.log(req.body)
+    //   if (err) {
+    //     res.send({'error': 'An error has occurred'})
+    //   } else {
+    //     res.send(result.ops[0])
+    //   }
+    // })
   })
 
 }
