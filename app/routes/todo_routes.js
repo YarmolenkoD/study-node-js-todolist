@@ -1,79 +1,87 @@
-let ObjectID = require('mongodb').ObjectID
-const mongoose = require('mongoose')
+const _ = require('lodash')
+const ObjectID = require('mongodb').ObjectID
+const {Todo} = require('../models/todo')
 
-module.exports = function(app, db, Todo) {
-  app.put ('/notes/:id', (req, res) => {
-    const id = req.params.id;
-    const details = { '_id': new ObjectID(id) }
-    const todo = { text: req.body.body, title: req.body.title }
-    db.collection('todos').update(details, todo, (err, result) => {
-      if (err) {
-        res.send({'error': 'An error has occurred'})
-      } else {
-        res.send(todo)
-      }
-    })
-  })
-
-  app.delete('/notes/:id', (req, res) => {
+module.exports = function(app, db) {
+  app.put ('/todos/:id', (req, res) => {
     const id = req.params.id
-    const details = { '_id': new ObjectID(id) }
-    db.collection('todos').remove(details, (err, item) => {
-      if (err) {
-        res.send({'error': 'An error has occurred'})
-      } else {
-        res.send(`Note ${item.title} deleted!`)
+    const body = _.pick(req.body, ['text', 'completed'])
+
+    if (!ObjectID.isValid(id)) {
+      return res.status(404).send()
+    }
+
+    if (_.isBoolean(body.completed) && body.completed) {
+      body.completedAt = new Date().getTime()
+    } else {
+      body.completed = false
+      body.completedAt = null
+    }
+
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+      if (!todo) {
+        return res.status(404).send()
       }
+
+      res.send({todo})
+    }).catch((e) => {
+      res.status(400).send()
     })
   })
 
-  app.get('/todo/:id', (req, res) => {
+  app.delete('/todos/:id', (req, res) => {
     const id = req.params.id
-    const details = { '_id': new ObjectID(id)}
-    db.collection('todos').findOne(details, (err, item) => {
-      if (err) {
-        res.send({'error': 'An error has occurred'})
-      } else {
-        res.send(item)
+    if (!ObjectID.isValid(id)) {
+      return res.status(404).send()
+    }
+
+    Todo.findByIdAndRemove(id).then((todo) => {
+      if (!todo) {
+        return res.status(404).send()
       }
+
+      res.send({todo})
+    }).catch((e) => {
+      res.status(400).send(e)
     })
   })
 
+  app.get('/todos/:id', (req, res) => {
+    const id = req.params.id
+    if (!ObjectID.isValid(id)) {
+      return res.status(404).send()
+    }
+
+    Todo.findById(id).then((todo) => {
+      if (!todo) {
+        return res.status(404).send()
+      }
+      res.send({todo: todo})
+    }).catch((e) => {
+      res.status(400).send(e)
+    })
+  })
 
   app.get('/todos', (req, res) => {
-    const allTodos = db.collection('todos').find({}, (err, items) => {
-      return items
-    })
-    let result = []
-    allTodos.forEach((err, item) => {
-      if (item) {
-        result.push(item)
-      } else {
-        res.end()
+    Todo.find().then((todos) => {
+      if (!todos) {
+        return res.status(404).send()
       }
+      res.send({todos})
+    }).catch((e) => {
+      res.status(400).send(e)
     })
-    res.json(result)
   })
 
-  app.post('/todo', (req, res) => {
+  app.post('/todos', (req, res) => {
     let newTodo = new Todo({
       text: req.body.body,
       title: req.body.title
     })
-    newTodo.save().then((doc) => {
-      console.log('save todo: ' + doc)
+    newTodo.save().then((todo) => {
+      res.send(todo)
     }, (e) => {
-      console.log('Unable to save todo: ' + e)
+      res.status(400).send(e)
     })
-    // const todo = { text: req.body.body, title: req.body.title }
-    // db.collection('todos').insert(todo, (err, result) => {
-    //   console.log(req.body)
-    //   if (err) {
-    //     res.send({'error': 'An error has occurred'})
-    //   } else {
-    //     res.send(result.ops[0])
-    //   }
-    // })
   })
-
 }

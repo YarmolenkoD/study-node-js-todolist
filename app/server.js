@@ -2,15 +2,17 @@ const express = require('express')
 const bodyParser = require('body-parser')
 
 const routes = require('./routes/index')
-const {mongoose} = require('./db/mongoose')
+const { mongoose } = require('./db/mongoose')
 
 const app = express()
-const port = 8000
+const port = process.env.PORT || process.env.port || 8000
 
-app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
 routes(app, mongoose)
 
 app.listen(port, () => {
-  console.log('Start server :' + port)
+  console.log(`Started up at port ${port}`)
 })
+
+module.exports = {app}
