@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 let Todo = mongoose.model('Todo', {
   description: {
     type: String,
-    required: true,
+    // required: true,
     minlength: 2,
     trim: true
   },
@@ -12,8 +12,8 @@ let Todo = mongoose.model('Todo', {
     default: false
   },
   date: {
-    type: String,
-    required: true
+    type: String
+    // required: true
   },
   image: {
     type: String

@@ -75,8 +75,10 @@ module.exports = function(app, db) {
 
   app.post('/todos', (req, res) => {
     let newTodo = new Todo({
-      text: req.body.body,
-      title: req.body.title
+      description: req.body.description,
+      date: req.body.date,
+      completed: req.body.completed || false,
+      image: req.body.image || ''
     })
     newTodo.save().then((todo) => {
       res.send(todo)
