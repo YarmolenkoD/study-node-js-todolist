@@ -1,19 +1,22 @@
 const mongoose = require('mongoose')
 
 let Todo = mongoose.model('Todo', {
-  text: {
+  description: {
     type: String,
-    required: true,
-    minlength: 1,
+    // required: true,
+    minlength: 2,
     trim: true
   },
   completed: {
     type: Boolean,
     default: false
   },
-  completedAt: {
-    type: Number,
-    default: null
+  date: {
+    type: String
+    // required: true
+  },
+  image: {
+    type: String
   }
 })
 
