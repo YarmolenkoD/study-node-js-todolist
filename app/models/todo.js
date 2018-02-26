@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 
-let Todo = mongoose.model('Todo', {
+let TodoSchema = new mongoose.Schema({
   description: {
     type: String,
-    // required: true,
+    required: true,
     minlength: 2,
     trim: true
   },
@@ -11,13 +11,15 @@ let Todo = mongoose.model('Todo', {
     type: Boolean,
     default: false
   },
-  date: {
+  completedAt: {
     type: String
-    // required: true
   },
   image: {
     type: String
   }
 })
+
+
+let Todo = mongoose.model('Todo', TodoSchema)
 
 module.exports = {Todo}

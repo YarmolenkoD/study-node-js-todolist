@@ -1,28 +1,27 @@
 const _ = require('lodash')
-const ObjectID = require('mongodb').ObjectID
 const {Todo} = require('../models/todo')
+
+function isCompleted (body) {
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime()
+  } else {
+    body.completed = false
+    body.completedAt = null
+  }
+  return body
+}
 
 module.exports = function(app, db) {
   app.put ('/todos/:id', (req, res) => {
     const id = req.params.id
-    const body = _.pick(req.body, ['text', 'completed'])
+    let body = _.pick(req.body, ['description', 'completed'])
 
-    if (!ObjectID.isValid(id)) {
-      return res.status(404).send()
-    }
-
-    if (_.isBoolean(body.completed) && body.completed) {
-      body.completedAt = new Date().getTime()
-    } else {
-      body.completed = false
-      body.completedAt = null
-    }
+    body = isCompleted(req.body)
 
     Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
       if (!todo) {
         return res.status(404).send()
       }
-
       res.send({todo})
     }).catch((e) => {
       res.status(400).send()
@@ -31,9 +30,6 @@ module.exports = function(app, db) {
 
   app.delete('/todos/:id', (req, res) => {
     const id = req.params.id
-    if (!ObjectID.isValid(id)) {
-      return res.status(404).send()
-    }
 
     Todo.findByIdAndRemove(id).then((todo) => {
       if (!todo) {
@@ -48,9 +44,6 @@ module.exports = function(app, db) {
 
   app.get('/todos/:id', (req, res) => {
     const id = req.params.id
-    if (!ObjectID.isValid(id)) {
-      return res.status(404).send()
-    }
 
     Todo.findById(id).then((todo) => {
       if (!todo) {
@@ -76,9 +69,9 @@ module.exports = function(app, db) {
   app.post('/todos', (req, res) => {
     let newTodo = new Todo({
       description: req.body.description,
-      date: req.body.date,
       completed: req.body.completed || false,
-      image: req.body.image || ''
+      image: req.body.image || '',
+      completedAt: req.body.completed ? new Date().getTime() : null
     })
     newTodo.save().then((todo) => {
       res.send(todo)
